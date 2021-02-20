@@ -1,0 +1,23 @@
+{
+  "name": "tp_frontend",
+  "version": "1.0.0",
+  "description": "практика по фронтенду с лекций",
+  "main": "index.js",
+  "scripts": {
+    "start": "DEBUG=* node server",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Sergei39/tp_frontend.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Sergei39/tp_frontend/issues"
+  },
+  "homepage": "https://github.com/Sergei39/tp_frontend#readme",
+  "dependencies": {
+    "debug": "^4.3.1"
+  }
+}
