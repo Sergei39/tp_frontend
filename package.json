@@ -4,7 +4,7 @@
   "description": "практика по фронтенду с лекций",
   "main": "index.js",
   "scripts": {
-    "start": "DEBUG=* node server",
+    "start": "DEBUG=http node server",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -18,6 +18,11 @@
   },
   "homepage": "https://github.com/Sergei39/tp_frontend#readme",
   "dependencies": {
-    "debug": "^4.3.1"
+    "body-parser": "^1.18.3",
+    "cookie-parser": "^1.4.4",
+    "debug": "^4.1.1",
+    "express": "^4.16.4",
+    "morgan": "^1.9.1",
+    "uuid": "^3.3.2"
   }
 }

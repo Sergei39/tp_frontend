@@ -1,4 +1,4 @@
-html,
+/* html,
 body {
     margin: 0;
     width: 100%;
@@ -14,4 +14,8 @@ body {
 .title {
     color: red;
     font-size: 47px;
+} */
+
+a, input {
+    display: block;
 }
