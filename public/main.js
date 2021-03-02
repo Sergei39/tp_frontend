@@ -9,6 +9,9 @@ console.log('hello');
 //  -стадия цели. События достигло целевого элемента
 //  -стадия всплытия. Событие начинает всплывать
 
+import {createBack} from './utils/back.js'
+import {BoardComponent} from './components/Board/Board.js'
+const HttpModule = window.HttpModule;
 const application = document.getElementById('app')
 
 const config = {
@@ -31,7 +34,51 @@ const config = {
         href: '/profile',
         text: 'Профиль',
         open: profilePage
+    },
+    leaders: {
+        href: '/leaders',
+        text: 'Рейтинг',
+        open: leaderboardPage,
     }
+}
+
+function leaderboardPage (users) {
+    application.innerHTML = '';
+
+    const leaderboardSection = document.createElement('section');
+    leaderboardSection.dataset.sectionName = 'leaderboard';
+
+    const header = document.createElement('h1');
+    header.textContent = 'Рейтинг';
+
+    const back = createBack();
+
+    leaderboardSection.appendChild(header);
+    leaderboardSection.appendChild(document.createElement('br'));
+
+    if (users) {
+        const Board = new BoardComponent({
+            parent: leaderboardSection,
+            data: users,
+        });
+        Board.render();
+    } else {
+        const em = document.createElement('em');
+        em.textContent = 'Loading';
+        leaderboardSection.appendChild(em);
+
+        HttpModule.get({
+            url: '/users',
+            callback: function (_, response) {
+                const users = JSON.parse(response);
+                leaderboardPage(users);
+            },
+        })
+    }
+
+    leaderboardSection.appendChild(document.createElement('br'));
+    leaderboardSection.appendChild(back);
+    application.appendChild(leaderboardSection);
 }
 
 
@@ -66,10 +113,7 @@ function signupPage() {
     submitBtn.type = 'submit';
     submitBtn.value = 'Зарегистрироваться';
 
-    const back = document.createElement('a');
-    back.href = '/menu';
-    back.textContent = 'Назад';
-    back.dataset.section = 'menu';
+    const back = createBack();
 
     form.appendChild(emailInput);
     form.appendChild(passwordInput);
@@ -100,10 +144,7 @@ function loginPage() {
     submitBtn.type = 'submit';
     submitBtn.value = 'Авторизоваться';
 
-    const back = document.createElement('a');
-    back.href = '/menu';
-    back.textContent = 'Назад'
-    back.dataset.section = 'menu';
+    const back = createBack();
 
     form.appendChild(emailInput);
     form.appendChild(passwordInput);
@@ -116,19 +157,18 @@ function loginPage() {
         const email = emailInput.value.trim();
         const password = passwordInput.value.trim();
 
-        ajax(
-            'POST',
-            '/login',
-            {email, password},
-            (status, response) => {
+        HttpModule.post({
+            url: '/login',
+            body: {email, password},
+            callback: (status, response) => {
                 if (status === 200) {
                     profilePage();
                 } else {
                     const {error} = JSON.parse(response);
                     alert(error);
                 }
-            }
-        )
+            },
+        })
     });
 
     application.appendChild(form);
@@ -137,50 +177,50 @@ function loginPage() {
 function profilePage() {
     application.innerHTML = '';
 
-    ajax('GET', '/me', null, (status, responseText) => {
-        let isAuthorized = false;
-
-        if (status === 200) {
-            isAuthorized = true;
-        }
-
-        if (status === 401) {
-            isAuthorized = false;
-        }
-
-        if (isAuthorized) {
-            const responseBody = JSON.parse(responseText);
-
-            const span = document.createElement('span');
-            span.innerHTML = `Мне ${responseBody.age} у меня ${responseBody.score} очков`;
-        
-            application.appendChild(span);
-
-            const back = document.createElement('a');
-            back.href = '/menu';
-            back.textContent = 'Назад';
-            back.dataset.section = 'menu';
-
-            application.appendChild(back);
-
-
-            const {images} = responseBody;
-
-            if (images && Array.isArray(images)) {
-                const div = document.createElement('div');
-                application.appendChild(div);
-
-                images.forEach((imageSrc) => {
-                    div.innerHTML += `<img src="${imageSrc}" width="600" />`;
-                });
+    HttpModule.get({
+        url: '/me',
+        callback: (status, responseText) => {
+            let isAuthorized = false;
+    
+            if (status === 200) {
+                isAuthorized = true;
             }
-
-            return;
-        }
-
-        alert('НЕТ АВТОРИЗАЦИИ');
-
-        loginPage();
+    
+            if (status === 401) {
+                isAuthorized = false;
+            }
+    
+            if (isAuthorized) {
+                const responseBody = JSON.parse(responseText);
+    
+                const span = document.createElement('span');
+                span.innerHTML = `Мне ${responseBody.age} у меня ${responseBody.score} очков`;
+            
+                application.appendChild(span);
+    
+                const back = createBack();
+    
+                application.appendChild(back);
+    
+    
+                const {images} = responseBody;
+    
+                if (images && Array.isArray(images)) {
+                    const div = document.createElement('div');
+                    application.appendChild(div);
+    
+                    images.forEach((imageSrc) => {
+                        div.innerHTML += `<img src="${imageSrc}" width="600" />`;
+                    });
+                }
+    
+                return;
+            }
+    
+                alert('НЕТ АВТОРИЗАЦИИ');
+        
+                loginPage();
+        },
     });
 
 }
@@ -195,23 +235,3 @@ application.addEventListener('click', e => {
         config[target.dataset.section].open();
     }
 });
-
-function ajax(method, url, body = null, callback) {
-    const xhr = new XMLHttpRequest();
-    xhr.open(method, url, true);
-    xhr.withCredentials = true;
-
-    xhr.addEventListener('readystatechange', function() {
-       if (xhr.readyState !== XMLHttpRequest.DONE) return;
-       
-       callback(xhr.status, xhr.responseText);
-    });
-
-    if (body) {
-        xhr.setRequestHeader('Content-type', 'application/json; charset=utf8');
-        xhr.send(JSON.stringify(body));
-        return;
-    }
-
-    xhr.send();
-}
